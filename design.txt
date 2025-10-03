@@ -1,0 +1,11 @@
+1. Start the program.
+2. Ask the user to enter contact details:
+   - Name
+   - Phone number
+   - Email
+3. Store the values in variables.
+   - Print the name
+   - Print the phone number
+   - Print the email
+4. Display the entered contact details back to the user in a clean format.
+5. End the program.
