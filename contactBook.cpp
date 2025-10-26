@@ -1,83 +1,89 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
 #include <string>
-#include <regex>
+#include <algorithm>
 
 struct Contact {
-    std::string name;
-    std::string phone;
-    std::string email;
+    std::string name, phone, email;
 };
 
-bool isValidPhone(const std::string& phone) {
-    // Check if phone is 10 digits long and contains only numbers
-    std::regex pattern("^[0-9]{10}$");
-    return std::regex_match(phone, pattern);
+void load_contacts(std::vector<Contact>& contacts) {
+    std::ifstream infile("contacts.txt");
+    Contact c;
+    while (infile >> c.name >> c.phone >> c.email) {
+        contacts.push_back(c);
+    }
+    infile.close();
 }
 
-void display_menu() {
-    std::cout << "\n=== Contact Book Menu ===\n";
-    std::cout << "1. Add Contact\n";
-    std::cout << "2. View All Contacts\n";
-    std::cout << "3. Exit\n";
-    std::cout << "Choose an option: ";
+void save_contacts(const std::vector<Contact>& contacts) {
+    std::ofstream outfile("contacts.txt");
+    for (const auto& c : contacts) {
+        outfile << c.name << " " << c.phone << " " << c.email << std::endl;
+    }
+    outfile.close();
 }
 
 void add_contact(std::vector<Contact>& contacts) {
     Contact c;
-    std::cin.ignore(); // clear previous input
-
-    std::cout << "Enter name: ";
-    std::getline(std::cin, c.name);
-
-    // Phone validation loop
-    do {
-        std::cout << "Enter phone (10 digits): ";
-        std::getline(std::cin, c.phone);
-        if (!isValidPhone(c.phone)) {
-            std::cout << "Invalid phone number! Try again.\n";
-        }
-    } while (!isValidPhone(c.phone));
-
-    std::cout << "Enter email: ";
-    std::getline(std::cin, c.email);
-
+    std::cin.ignore();
+    std::cout << "Enter name: "; getline(std::cin, c.name);
+    std::cout << "Enter phone: "; getline(std::cin, c.phone);
+    std::cout << "Enter email: "; getline(std::cin, c.email);
     contacts.push_back(c);
-    std::cout << "Contact saved successfully!\n";
+}
+
+void search_contact(const std::vector<Contact>& contacts) {
+    std::string query;
+    std::cin.ignore();
+    std::cout << "Enter name to search: "; getline(std::cin, query);
+    bool found = false;
+    for (const auto& c : contacts) {
+        if (c.name == query) {
+            std::cout << "Found: " << c.name << ", " << c.phone << ", " << c.email << std::endl;
+            found = true;
+        }
+    }
+    if (!found) std::cout << "Contact not found!\n";
+}
+
+void delete_contact(std::vector<Contact>& contacts) {
+    std::string query;
+    std::cin.ignore();
+    std::cout << "Enter name to delete: "; getline(std::cin, query);
+    auto it = std::remove_if(contacts.begin(), contacts.end(),
+        [&](const Contact& c) { return c.name == query; });
+    if (it != contacts.end()) {
+        contacts.erase(it, contacts.end());
+        std::cout << "Contact deleted.\n";
+    } else {
+        std::cout << "Contact not found.\n";
+    }
 }
 
 void view_contacts(const std::vector<Contact>& contacts) {
-    if (contacts.empty()) {
-        std::cout << "No contacts found.\n";
-        return;
-    }
-
-    std::cout << "\n--- Contact List ---\n";
-    for (size_t i = 0; i < contacts.size(); ++i) {
-        std::cout << "Contact #" << (i + 1) << "\n";
-        std::cout << "Name  : " << contacts[i].name << "\n";
-        std::cout << "Phone : " << contacts[i].phone << "\n";
-        std::cout << "Email : " << contacts[i].email << "\n";
-        std::cout << "---------------------\n";
+    for (const auto& c : contacts) {
+        std::cout << c.name << " " << c.phone << " " << c.email << std::endl;
     }
 }
 
 int main() {
     std::vector<Contact> contacts;
+    load_contacts(contacts);
+
     int choice;
-
     do {
-        display_menu();
+        std::cout << "\n1. Add\n2. View\n3. Search\n4. Delete\n5. Exit\nChoice: ";
         std::cin >> choice;
-
         switch (choice) {
             case 1: add_contact(contacts); break;
             case 2: view_contacts(contacts); break;
-            case 3: std::cout << "Goodbye!\n"; break;
-            default: std::cout << "Invalid choice!\n"; break;
+            case 3: search_contact(contacts); break;
+            case 4: delete_contact(contacts); break;
+            case 5: save_contacts(contacts); std::cout << "Data saved!\n"; break;
+            default: std::cout << "Invalid option\n";
         }
-    } while (choice != 3);
-
+    } while (choice != 5);
     return 0;
 }
-
